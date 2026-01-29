@@ -56,7 +56,7 @@ sample_size = st.sidebar.slider(
     value=200
 )
 
-data_sample = df.sample(sample_size, random_state=42)
+data_sample = df.sample(sample_size, random_state=42).copy()
 
 # -----------------------
 # Sentiment Analysis
@@ -85,18 +85,30 @@ sentiment_fig = px.pie(
     title="Sentiment Polarity of Airline Tweets",
     hole=0.4
 )
-st.plotly_chart(sentiment_fig, use_container_width=True)
 
+st.plotly_chart(sentiment_fig, width="stretch")
+
+# -----------------------
+# Emotion Distribution (FIXED)
+# -----------------------
 st.subheader("😊 Emotion Distribution")
 
+emotion_counts = (
+    data_sample["Emotion"]
+    .value_counts()
+    .reset_index()
+)
+
+emotion_counts.columns = ["Emotion", "Count"]
+
 emotion_fig = px.bar(
-    data_sample["Emotion"].value_counts().reset_index(),
-    x="index",
-    y="Emotion",
-    labels={"index": "Emotion", "Emotion": "Tweet Count"},
+    emotion_counts,
+    x="Emotion",
+    y="Count",
     title="Detected Emotions in Tweets"
 )
-st.plotly_chart(emotion_fig, use_container_width=True)
+
+st.plotly_chart(emotion_fig, width="stretch")
 
 # -----------------------
 # Tweet Explorer
@@ -105,7 +117,7 @@ st.subheader("🔍 Tweet Explorer")
 
 selected_sentiment = st.selectbox(
     "Filter by Sentiment",
-    ["All"] + list(data_sample["Sentiment"].unique())
+    ["All"] + sorted(data_sample["Sentiment"].unique())
 )
 
 if selected_sentiment != "All":
@@ -115,5 +127,5 @@ else:
 
 st.dataframe(
     filtered_df[[text_column, "Sentiment", "Emotion"]],
-    use_container_width=True
+    width="stretch"
 )
